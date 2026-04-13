@@ -60,7 +60,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
         setIsVideoLoaded(true);
       });
 
-      hls.on(Hls.Events.ERROR, (event, data) => {
+      hls.on(Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
           console.error("HLS error:", data);
         }
