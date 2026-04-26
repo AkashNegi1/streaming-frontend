@@ -19,7 +19,7 @@ export const saveVideoProgress = async (id: string, progress: number) => {
 
 export const getAllVideos = async () => {
     const res = await api.get("/videos");
-    return res.data as Array<{id: string, title: string, thumbnailUrl: string, duration: number}>;
+    return res.data as Array<{id: string, title: string, thumbnailUrl: string, duration: number, status: 'PROCESSING' | 'READY' | 'FAILED'}>;
 }
 
 export interface FeaturedVideo {

@@ -1,21 +1,24 @@
 import { useRef } from "react";
 import VideoCard from "./VideoCard";
 import SkeletonLoader from "./SkeletonLoader";
-
+import ProcessingVideoCard from "./ProcessingVideoCard";
 interface Video {
   id: string;
   title: string;
   thumbnailUrl: string | null;
+  previewUrl?: string | null;
   duration: number | null;
+  status: 'PROCESSING' | 'READY' | 'FAILED'; // 🚨 NEW
 }
 
 interface VideoRowProps {
   title: string;
   videos: Video[];
   loading?: boolean;
+  onRefresh?: ()=> void;
 }
 
-export default function VideoRow({ title, videos, loading = false }: VideoRowProps) {
+export default function VideoRow({ title, videos, loading = false, onRefresh }: VideoRowProps) {
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -61,15 +64,31 @@ export default function VideoRow({ title, videos, loading = false }: VideoRowPro
           className="flex gap-4 overflow-x-auto px-4 scrollbar-hide"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {videos.map((video) => (
-            <VideoCard
-              key={video.id}
-              id={video.id}
-              title={video.title}
-              thumbnailUrl={video.thumbnailUrl}
-              duration={video.duration}
-            />
-          ))}
+          {videos.map((video) => {
+            if (video.status === 'PROCESSING') {
+              return (
+                <ProcessingVideoCard 
+                  key={video.id}
+                  videoId={video.id}
+                  title={video.title}
+                  onComplete={() => {
+                    if(onRefresh){
+                      onRefresh();
+                    }
+                  }}
+                />
+              );
+            }
+            return (
+              <VideoCard
+                key={video.id}
+                id={video.id}
+                title={video.title}
+                thumbnailUrl={video.thumbnailUrl}
+                duration={video.duration}
+              />
+            );
+          })}
         </div>
 
         <button

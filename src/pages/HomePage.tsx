@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAllVideos, getFeaturedVideo } from "../api/videos";
 import type { FeaturedVideo } from "../api/videos";
 import HeroBanner from "../components/HeroBanner";
@@ -10,6 +10,7 @@ interface Video {
   title: string;
   thumbnailUrl: string | null;
   duration: number | null;
+  status: 'PROCESSING' | 'READY' | 'FAILED'; // 🚨 NEW
 }
 
 const HomePage = () => {
@@ -17,25 +18,40 @@ const HomePage = () => {
   const [featuredVideo, setFeaturedVideo] = useState<FeaturedVideo | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshVideos = useCallback(async ()=>{
+    try {
+      const [allVideos, featured] = await Promise.all([
+        getAllVideos(),
+        getFeaturedVideo()
+      ]);
+      setVideos(allVideos);
+      setFeaturedVideo(featured);
+    } catch (error) {
+      console.error("Failed to fetch videos:", error);
+    }
+  },[])
+  
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [allVideos, featured] = await Promise.all([
-          getAllVideos(),
-          getFeaturedVideo()
-        ]);
-        
-        setVideos(allVideos);
-        setFeaturedVideo(featured);
-      } catch (error) {
-        console.error("Failed to fetch videos:", error);
-      } finally {
+    let isMounted = true; // 🚨 Protects against unmount memory leaks
+
+    const loadInitialData = async () => {
+      // 1. Wait for the data to fetch
+      await refreshVideos(); 
+
+      // 2. Only turn off the loading skeleton if the user is still on the page!
+      if (isMounted) {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    loadInitialData();
+
+    // 3. The Cleanup Function
+    // If the component unmounts before the fetch finishes, this flips to false
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshVideos]);
 
   return (
     <div className="h-full bg-black">
@@ -47,6 +63,7 @@ const HomePage = () => {
           title="All Videos"
           videos={videos}
           loading={loading}
+          onRefresh={refreshVideos}
         />
       </div>
     </div>
