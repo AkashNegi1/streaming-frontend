@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 interface ProcessingCardProps {
   videoId: string;
   title: string;
@@ -11,17 +11,14 @@ export default function ProcessingVideoCard({ videoId, title, onComplete }: Proc
   const [progress, setProgress] = useState<number>(0);
   const [status, setStatus] = useState<string>('Starting...');
 
-  // 🚨 THE FIX: Store the callback in a ref!
-  // This ensures we always call the latest version of onComplete, 
-  // but it prevents React from endlessly restarting the WebSocket.
+  
   const onCompleteRef = useRef(onComplete);
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
   useEffect(() => {
-    // We add 'transports: ["websocket"]' to bypass HTTP long-polling and force a direct WS connection
-    const socket: Socket = io('http://localhost:3000', {
+    const socket: Socket = io(`${VITE_API_URL}`, {
       transports: ['websocket'],
     }); 
 
@@ -42,7 +39,6 @@ export default function ProcessingVideoCard({ videoId, title, onComplete }: Proc
           socket.disconnect();
           
           setTimeout(() => {
-             // 🚨 Call it via the ref!
             onCompleteRef.current();
           }, 1000); 
         }
@@ -52,7 +48,6 @@ export default function ProcessingVideoCard({ videoId, title, onComplete }: Proc
     return () => {
       socket.disconnect();
     };
-  // 🚨 CRITICAL: We removed onComplete from this array. It only depends on videoId now!
   }, [videoId]); 
 
   return (
