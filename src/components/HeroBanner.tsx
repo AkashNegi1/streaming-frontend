@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import SkeletonLoader from "./SkeletonLoader";
 import { useEffect, useRef, useState } from "react";
-import { FaVolumeMute, FaVolumeUp, FaInfoCircle } from "react-icons/fa";
+import { FaVolumeMute, FaVolumeUp, FaInfoCircle, FaPlay } from "react-icons/fa";
 import Hls from "hls.js";
 import api from "../api/client";
 const VITE_API_URL = import.meta.env.VITE_API_URL;
@@ -32,7 +32,8 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
 
   useEffect(() => {
     if (!video?.id || !videoRef.current) return;
-
+      
+      
     const videoEl = videoRef.current;
 
     const loadStream = async () => {
@@ -40,7 +41,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
         const response = await api.get(`/videos/${video.id}/play`);
         const streamPath = response.data.streamUrl;
         const fullUrl = `${VITE_API_URL}${streamPath}`;
-
+      
     if (Hls.isSupported()) {
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -83,7 +84,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
         hlsRef.current = null;
       }
     };
-  }, [video?.id]);
+  }, [video?.id, loading]);
 
   useEffect(() => {
     if (!isVideoLoaded) return;
@@ -203,7 +204,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
               }}
               className="bg-white text-black hover:bg-gray-200 font-semibold px-8 py-3 rounded-md flex items-center gap-2 transition-colors"
             >
-              <span className="text-xl">▶</span>
+              <span className="text-xl"><FaPlay /></span>
               Play
             </button>
             <button
@@ -248,7 +249,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
             }}
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white w-24 h-24 rounded-full flex items-center justify-center transition-all hover:scale-110"
           >
-            <span className="text-4xl">▶</span>
+            <span className="text-4xl"><FaPlay/></span>
           </button>
           <p className="text-white mt-4 text-lg font-medium absolute bottom-32">
             Click to watch full video

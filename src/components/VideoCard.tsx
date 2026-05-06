@@ -1,5 +1,7 @@
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 import { useState } from "react";
+import { FaPlay } from "react-icons/fa";
+import { IoIosInformationCircleOutline } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 
 interface VideoCardProps {
@@ -68,11 +70,11 @@ export default function VideoCard({
               {title}
             </h3>
             <div className="flex gap-2">
-              <button className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded font-medium">
-                ▶ Play
+              <button className= " text-white text-xs px-3 py-1.5 rounded font-medium flex gap-2 bg-rose-900 hover:scale-110">
+                <FaPlay/> Play
               </button>
-              <button className="border border-gray-500 hover:border-white text-white text-xs px-3 py-1.5 rounded font-medium">
-                ℹ Info
+              <button className="border border-gray-500 hover:border-white hover:scale-110 text-white text-xs px-3 py-1.5 rounded font-medium flex gap-2">
+                <IoIosInformationCircleOutline/> Info
               </button>
             </div>
           </div>

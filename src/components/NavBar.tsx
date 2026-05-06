@@ -15,8 +15,8 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black to-transparent">
       <div className="px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="text-2xl font-bold text-red-600">
-            NETFLIX
+          <Link to="/" className="text-2xl font text-red-600">
+            StreamFlow
           </Link>
           
           {authenticated && (

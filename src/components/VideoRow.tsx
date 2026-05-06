@@ -2,6 +2,7 @@ import { useRef } from "react";
 import VideoCard from "./VideoCard";
 import SkeletonLoader from "./SkeletonLoader";
 import ProcessingVideoCard from "./ProcessingVideoCard";
+import { FaCaretRight, FaCaretLeft } from "react-icons/fa";
 interface Video {
   id: string;
   title: string;
@@ -56,7 +57,7 @@ export default function VideoRow({ title, videos, loading = false, onRefresh }: 
           onClick={() => scroll("left")}
           className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/80 hover:bg-red-600 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
         >
-          ◀
+          <FaCaretLeft/>
         </button>
 
         <div
@@ -95,7 +96,7 @@ export default function VideoRow({ title, videos, loading = false, onRefresh }: 
           onClick={() => scroll("right")}
           className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/80 hover:bg-red-600 text-white w-10 h-10 rounded-full flex items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity"
         >
-          ▶
+          <FaCaretRight />
         </button>
       </div>
     </div>

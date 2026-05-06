@@ -291,7 +291,7 @@ export default function VideoPlayer({ src, videoId }: VideoPlayerProps) {
 
       {buffering && (
         <div className="absolute inset-0 flex items-center justify-center text-white">
-          Loading...
+          <span className="loading loading-ring loading-xl"></span>
         </div>
       )}
 
