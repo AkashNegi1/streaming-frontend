@@ -45,19 +45,18 @@ export default function VideoPlayer({ src, videoId }: VideoPlayerProps) {
 
   const [savedProgress, setSavedProgress] = useState(0);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
-  const [hasResumed, setHasResumed] = useState(false);
 
   const clickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const saveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const saveProgress = useCallback(() => {
-    if (videoId && videoRef.current && hasResumed) {
-      const currentTime = Math.floor(videoRef.current.currentTime);
+    if (videoId && videoRef.current) {
+      const currentTime = Math.round(videoRef.current.currentTime);
       if (currentTime > 5) {
         saveVideoProgress(videoId, currentTime).catch(() => {});
       }
     }
-  }, [videoId, hasResumed]);
+  }, [videoId]);
 
   useEffect(() => {
     const video = videoRef.current!;
@@ -72,6 +71,12 @@ export default function VideoPlayer({ src, videoId }: VideoPlayerProps) {
     } else {
       video.src = src;
     }
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
   }, [src]);
 
   useEffect(() => {
@@ -111,14 +116,25 @@ export default function VideoPlayer({ src, videoId }: VideoPlayerProps) {
   }, [saveProgress, videoId]);
 
   useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) saveProgress();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      saveProgress();
+    };
+  }, [saveProgress]);
+
+  useEffect(() => {
     if (!videoId) return;
-    if (!playing || hasResumed) return;
+    if (!playing) return;
 
     saveIntervalRef.current = setInterval(saveProgress, VIDEO_CONFIG.PROGRESS_SAVE_INTERVAL);
     return () => {
       if (saveIntervalRef.current) clearInterval(saveIntervalRef.current);
     };
-  }, [playing, hasResumed, saveProgress, videoId]);
+  }, [playing, saveProgress, videoId]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -148,6 +164,9 @@ export default function VideoPlayer({ src, videoId }: VideoPlayerProps) {
 
     return () => {
       video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("loadedmetadata", onLoaded);
+      video.removeEventListener("waiting", onWaiting);
+      video.removeEventListener("playing", onPlaying);
       video.removeEventListener("progress", onProgress);
     };
   }, []);
@@ -271,12 +290,10 @@ export default function VideoPlayer({ src, videoId }: VideoPlayerProps) {
       video.currentTime = savedProgress;
     }
     setShowResumePrompt(false);
-    setHasResumed(true);
   };
 
   const handleStartFresh = () => {
     setShowResumePrompt(false);
-    setHasResumed(true);
   };
 
   return (

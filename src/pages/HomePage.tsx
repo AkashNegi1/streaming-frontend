@@ -10,7 +10,7 @@ interface Video {
   title: string;
   thumbnailUrl: string | null;
   duration: number | null;
-  status: 'PROCESSING' | 'READY' | 'FAILED'; // 🚨 NEW
+  status: 'PROCESSING' | 'READY' | 'FAILED';
 }
 
 const HomePage = () => {
@@ -32,7 +32,7 @@ const HomePage = () => {
   },[])
   
   useEffect(() => {
-    let isMounted = true; // 🚨 Protects against unmount memory leaks
+    let isMounted = true; //  Protects against unmount memory leaks
 
     const loadInitialData = async () => {
       // 1. Wait for the data to fetch
