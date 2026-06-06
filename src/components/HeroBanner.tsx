@@ -3,7 +3,6 @@ import SkeletonLoader from "./SkeletonLoader";
 import { useEffect, useRef, useState } from "react";
 import { FaVolumeMute, FaVolumeUp, FaInfoCircle, FaPlay } from "react-icons/fa";
 import Hls from "hls.js";
-import api from "../api/client";
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 interface FeaturedVideo {
   id: string;
@@ -29,19 +28,14 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
   const [previewEnded, setPreviewEnded] = useState(false);
   const [countdown, setCountdown] = useState(15);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
 
   useEffect(() => {
     if (!video?.id || !videoRef.current) return;
-      
-      
-    const videoEl = videoRef.current;
 
-    const loadStream = async () => {
-      try {
-        const response = await api.get(`/videos/${video.id}/play`);
-        const streamPath = response.data.streamUrl;
-        const fullUrl = `${VITE_API_URL}${streamPath}`;
-      
+    const videoEl = videoRef.current;
+    const previewUrl = `${VITE_API_URL}/preview/featured/preview.m3u8`;
+
     if (Hls.isSupported()) {
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -49,12 +43,12 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
 
       const hls = new Hls();
       hlsRef.current = hls;
-      hls.loadSource(fullUrl);
+      hls.loadSource(previewUrl);
       hls.attachMedia(videoEl);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         videoEl.muted = true;
-        videoEl.play().catch(err => console.error("Autoplay failed:", err));
+        videoEl.play().catch(() => setPreviewFailed(true));
       });
 
       hls.on(Hls.Events.LEVEL_LOADED, () => {
@@ -63,20 +57,14 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
 
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (data.fatal) {
-          console.error("HLS error:", data);
+          setPreviewFailed(true);
         }
       });
     } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
-      videoEl.src = fullUrl;
+      videoEl.src = previewUrl;
       videoEl.muted = true;
-      videoEl.play().catch(err => console.error("Autoplay failed:", err));
+      videoEl.play().catch(() => setPreviewFailed(true));
     }
-      } catch (error) {
-        console.error("Failed to load stream:", error);
-      }
-    };
-
-    loadStream();
 
     return () => {
       if (hlsRef.current) {
@@ -160,7 +148,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
           src={video.thumbnailUrl}
           alt={video.title}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-            isVideoLoaded ? "opacity-0" : "opacity-100"
+            !previewFailed && isVideoLoaded ? "opacity-0" : "opacity-100"
           }`}
         />
       )}
@@ -168,7 +156,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
       <video
         ref={videoRef}
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-          isVideoLoaded ? "opacity-100" : "opacity-0"
+          isVideoLoaded && !previewFailed ? "opacity-100" : "opacity-0"
         }`}
         playsInline
         loop={!previewEnded}
@@ -181,7 +169,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
       <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 z-10">
         <div
           className={`max-w-2xl transition-all duration-500 ease-out ${
-            showInfo || previewEnded
+            showInfo || previewEnded || previewFailed
               ? "translate-y-0 opacity-100"
               : "translate-y-8 opacity-0"
           }`}
@@ -219,7 +207,7 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
           </div>
         </div>
 
-        {!previewEnded && isVideoLoaded && (
+        {!previewEnded && isVideoLoaded && !previewFailed && (
           <div className="mt-4">
             <div className="bg-black/50 inline-flex items-center gap-2 px-4 py-2 rounded-full">
               <span className="text-white font-medium text-sm">
@@ -230,17 +218,19 @@ export default function HeroBanner({ video, loading = false }: HeroBannerProps) 
         )}
       </div>
 
-      <div className="absolute bottom-8 right-8 z-20">
-        <button
-          onClick={toggleMute}
-          className="bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors"
-          title={isMuted ? "Unmute" : "Mute"}
-        >
-          {isMuted ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
-        </button>
-      </div>
+      {!previewFailed && (
+        <div className="absolute bottom-8 right-8 z-20">
+          <button
+            onClick={toggleMute}
+            className="bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors"
+            title={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
+          </button>
+        </div>
+      )}
 
-      {previewEnded && (
+      {previewEnded && !previewFailed && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <button
             onClick={(e) => {
